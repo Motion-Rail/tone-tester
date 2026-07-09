@@ -165,6 +165,15 @@
           align-items:center; justify-content:center; line-height:1.2;}
   .finish span{font-size:.6rem; font-weight:600; color:var(--muted);}
   .finish:active{transform:translateY(1px);}
+
+  /* RTU busy: NEXT / Back / Repeat are locked until the source frees up */
+  .locked{opacity:.45; pointer-events:none; filter:grayscale(.35);}
+  .next.locked{background:var(--pend);}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+  .shake{animation:shake .35s;}
+  /* while toning, the grid + ribbon rail cannot be tapped */
+  body.busy .grid, body.busy .dots{opacity:.55; pointer-events:none;}
+  body.busy .kbd-hint{color:var(--tone);}
   .act{border:1px solid var(--border); background:var(--surface2); border-radius:10px; padding:9px 2px; color:var(--text); font-size:.68rem; font-weight:600; cursor:pointer;}
   .act:active{transform:translateY(1px);}
   .act.off{color:var(--off);} .act.off.on{background:var(--off-dim); border-color:var(--off);}
@@ -304,7 +313,7 @@
     <div class="grid" id="grid"></div>
   </main>
 
-  <div class="kbd-hint">Space / → Next · ← Back · R Repeat · D Dis · X Cross</div>
+  <div class="kbd-hint" id="kbdHint">Space / → Next · ← Back · R Repeat · D Dis · X Cross</div>
 
   <div class="actions">
     <div class="act-row">
@@ -426,6 +435,9 @@ let crosses={};                              // index -> "crossed with ..."
   let current=0, viewRib=0;
   let toning=false, cdTimer=null;
   let busyUntil=0;            // RTU source is occupied until this timestamp
+  let toneOk=false;           // did a tone actually fire for the current fibre?
+  const busyMs=()=>Math.max(0,busyUntil-Date.now());
+  const isBusy=()=>busyMs()>0;
 
   const jget=(k,d)=>{ try{const v=JSON.parse(localStorage.getItem(k)); return v==null?d:v;}catch(e){return d;} };
   const jset=(k,v)=>{ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} };
@@ -478,7 +490,7 @@ let crosses={};                              // index -> "crossed with ..."
     cdTimer=setInterval(()=>{
       const el=Date.now()-t0, frac=Math.max(0,1-el/total);
       $("cdBar").style.width=(frac*100)+"%";
-      if(el>=total){ clearInterval(cdTimer); toning=false; busyUntil=0; $("hero").classList.remove("toning");
+      if(el>=total){ clearInterval(cdTimer); toning=false; $("hero").classList.remove("toning");
         const st=status[current];
         setState(st==="dis"?"offT":st==="cross"?"crossT":st==="done"?"doneT":"idle",
                  st==="dis"?"Marked DIS":st==="cross"?("CROSSED"+(crosses[current]?" with "+crosses[current]:"")):st==="done"?"Confirmed":"Tone ended — Repeat if needed"); }
@@ -496,9 +508,12 @@ let crosses={};                              // index -> "crossed with ..."
       return;
     }
     $("cdBar").style.width="100%";
+    toneOk=false;
     try{
       const r=await fireTone(current);
-      busyUntil=Date.now()+((+cfg.dur||10)*1000)+500;   // +0.5s grace
+      toneOk=true;
+      busyUntil=Date.now()+((+cfg.dur||5)*1000)+500;   // +0.5s grace; EXFO enforces this too
+      lockUI();
       const sim = !!(r && r.simulated);
       $("simBanner").classList.toggle("show", sim);
       startCountdown(sim);
@@ -520,24 +535,63 @@ let crosses={};                              // index -> "crossed with ..."
   }
 
   // ── navigation ──
-  function setCurrent(i){ current=i; viewRib=ribOf(i); render(); saveRun(); toneCurrent(); }
+  function setCurrent(i){
+    if(isBusy()) return nudge();
+    current=i; viewRib=ribOf(i); render(); saveRun(); toneCurrent();
+  }
   function next(){
-    if(status[current]!=="dis" && status[current]!=="cross") status[current]="done";
+    if(isBusy()) return nudge();
+    // Only mark confirmed if a tone actually fired for this fibre.
+    if(status[current]!=="dis" && status[current]!=="cross"){
+      if(!toneOk){ setLink("err","No tone was sent for "+label(current)+" — press Repeat."); return; }
+      status[current]="done";
+    }
     const nx=findNext(current);
     if(nx===-1){ status[current]="done"; render(); saveRun(); finish(); return; }
     setCurrent(nx);
   }
-  function back(){ if(current>0) setCurrent(current-1); }
-  function repeat(){ toneCurrent(); }
+  function back(){ if(isBusy()) return nudge(); if(current>0) setCurrent(current-1); }
+  function repeat(){ if(isBusy()) return nudge(); toneCurrent(); }
   function toggleDis(){ status[current]=status[current]==="dis"?"pending":"dis"; render(); saveRun(); }
   function toggleCross(){
     if(status[current]==="cross"){ status[current]="pending"; delete crosses[current]; render(); saveRun(); return; }
     openCross();
   }
   function jumpRibbon(r){
+    if(isBusy()) return nudge();
     r=(r+RIBBONS)%RIBBONS; const s=ribStart(r); let t=s;
     for(let p=0;p<PER;p++) if(status[s+p]!=="done"){ t=s+p; break; }
     setCurrent(t);
+  }
+
+  // ── busy lock: NEXT is disabled while the RTU source is occupied ──
+  let lockTimer=null;
+  function nudge(){
+    const b=$("nextBtn"); b.classList.add("shake");
+    setTimeout(()=>b.classList.remove("shake"),400);
+    setLink("err","RTU busy \u2014 wait "+Math.ceil(busyMs()/1000)+"s");
+  }
+  function lockUI(){
+    clearInterval(lockTimer);
+    const paint=()=>{
+      const ms=busyMs(), b=$("nextBtn");
+      const dis=[$("nextBtn"),$("backBtn"),$("repeatBtn")];
+      if(ms>0){
+        dis.forEach(el=>el.classList.add("locked"));
+        b.querySelector("span").textContent="WAIT "+Math.ceil(ms/1000)+"s";
+        $("nxTarget").textContent="RTU toning\u2026";
+        document.body.classList.add("busy");
+        $("kbdHint").textContent="\u26a1 RTU is toning \u2014 controls locked for "+Math.ceil(ms/1000)+"s";
+      } else {
+        clearInterval(lockTimer);
+        dis.forEach(el=>el.classList.remove("locked"));
+        document.body.classList.remove("busy");
+        $("kbdHint").textContent="Space / \u2192 Next \u00b7 \u2190 Back \u00b7 R Repeat \u00b7 D Dis \u00b7 X Cross";
+        render();
+      }
+    };
+    paint();
+    lockTimer=setInterval(paint,200);
   }
 
   // ── render ──
@@ -554,8 +608,10 @@ let crosses={};                              // index -> "crossed with ..."
     $("issueNote").textContent=notes.join("   ");
 
     const nx=findNext(ci), nb=$("nextBtn"), nt=$("nxTarget");
-    if(nx===-1){ nb.classList.add("finished"); nb.querySelector("span").textContent="FINISH ✓"; nt.textContent="all confirmed"; }
-    else{ nb.classList.remove("finished"); nb.querySelector("span").textContent="NEXT ▸"; nt.textContent=label(nx)+" · R"+(ribOf(nx)+1); }
+    if(!isBusy()){   // while busy, lockUI owns the button label
+      if(nx===-1){ nb.classList.add("finished"); nb.querySelector("span").textContent="FINISH ✓"; nt.textContent="all confirmed"; }
+      else{ nb.classList.remove("finished"); nb.querySelector("span").textContent="NEXT ▸"; nt.textContent=label(nx)+" · R"+(ribOf(nx)+1); }
+    }
 
     $("ribLabel").textContent="Ribbon "+(viewRib+1);
     $("ribRange").textContent=label(ribStart(viewRib))+" – "+label(ribStart(viewRib)+PER-1);
@@ -812,7 +868,7 @@ let crosses={};                              // index -> "crossed with ..."
   document.addEventListener("keydown",e=>{
     if(!$("screen-test").classList.contains("on"))return;
     if(e.target && e.target.tagName==="INPUT"||e.target && e.target.tagName==="TEXTAREA")return;
-    if(e.code==="Space"||e.code==="Enter"||e.code==="ArrowRight"){e.preventDefault();next();}
+    if(e.code==="Space"||e.code==="Enter"||e.code==="ArrowRight"){e.preventDefault(); if(isBusy()){nudge();return;} next();}
     else if(e.code==="ArrowLeft"){e.preventDefault();back();}
     else if(e.key==="r"||e.key==="R"){e.preventDefault();repeat();}
     else if(e.key==="f"||e.key==="F"||e.key==="d"||e.key==="D"){e.preventDefault();toggleDis();}
