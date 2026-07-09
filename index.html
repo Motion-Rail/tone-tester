@@ -3,23 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#0c0f14">
+<meta name="theme-color" content="#016976">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Tone Tester">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
-<title>Fibre Tone Tester</title>
+<title>Motion Tone Tester</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
   :root {
     --bg:#0c0f14; --surface:#151a22; --surface2:#1c232e; --border:#2a333f;
     --muted:#8a97a6; --text:#eef3f8;
-    --tone:#ffab2e; --tone-glow:rgba(255,171,46,.30);
+    --tone:#16b6c9; --tone-glow:rgba(22,182,201,.32);
+    --brand:#016976; --brand-lt:#0a97a8;
     --done:#2ea043; --done-dim:#123a1e;
     --pend:#3a4657;
     --off:#e5484d; --off-dim:#3a171a;
-    --accent:#4aa8ff;
+    --accent:#16b6c9;
   }
   html,body{height:100%;}
   body{
@@ -55,8 +56,9 @@
   .centre{flex:1; overflow-y:auto; padding:24px 18px; display:flex; flex-direction:column; justify-content:center;}
   .card{max-width:440px; margin:0 auto; width:100%;}
   .logo{display:flex; align-items:center; gap:10px; margin-bottom:6px;}
-  .logo .fork{width:26px; height:26px;}
-  .logo h1{font-size:1.05rem; letter-spacing:.06em; text-transform:uppercase; color:var(--tone);}
+  .logo{flex-direction:column; align-items:flex-start; gap:6px;}
+  .brandlogo{height:34px; width:auto; display:block;}
+  .logo h1{font-size:1.02rem; letter-spacing:.06em; text-transform:uppercase; color:var(--text); font-weight:700;}
   .sub{color:var(--muted); font-size:.84rem; line-height:1.5; margin-bottom:18px;}
   .statusline{display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:.78rem; color:var(--muted);}
   .cable-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px 12px; margin-bottom:7px;
@@ -66,15 +68,24 @@
   .cable-row .cs{font-size:.86rem; font-weight:700;}
   .cable-row .crtu{font-size:.7rem; color:var(--muted); margin-top:3px;}
   .cable-row .crtu b{color:var(--tone); font-weight:700;}
+  .cable-row.offline{opacity:.62; border-style:dashed;}
+  .rtu-dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle;}
+  .rtu-dot.on{background:var(--done); box-shadow:0 0 6px var(--done);}
+  .rtu-dot.off{background:var(--off);}
+  .rtu-tag{font-size:.62rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase;}
+  .rtu-tag.on{color:var(--done);} .rtu-tag.off{color:var(--off);}
   .cable-row .cf{font-size:.72rem; color:var(--muted); white-space:nowrap;}
 
   /* ── TEST SCREEN ── */
   header{background:var(--surface); border-bottom:1px solid var(--border); padding:8px 12px 0; flex:0 0 auto;}
   .top-row{display:flex; align-items:center; gap:8px;}
+  .hdrlogo{height:22px; width:auto; flex:0 0 auto; opacity:.95;}
   .route-ref{flex:1; min-width:0; font-size:.82rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .route-ref small{display:block; font-weight:400; color:var(--muted); font-size:.66rem;}
   .icon-btn{flex:0 0 auto; width:36px; height:32px; border-radius:7px; background:var(--surface2); border:1px solid var(--border); color:var(--muted); font-size:1rem; cursor:pointer;}
   .icon-btn:active{background:var(--border);}
+  .locbar{font-size:.68rem; color:var(--muted); padding:2px 0 0;}
+  .locbar b{color:var(--tone);}
   .progress-row{display:flex; align-items:center; gap:10px; padding:8px 0 10px;}
   .bar{flex:1; height:7px; border-radius:4px; background:var(--surface2); overflow:hidden;}
   .bar>i{display:block; height:100%; width:0; background:var(--done); transition:width .18s ease;}
@@ -99,7 +110,7 @@
   main{flex:1 1 auto; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:12px;}
   .hero{position:relative; border-radius:16px; padding:16px; background:var(--surface); border:2px solid var(--border); display:flex; align-items:center; gap:16px; overflow:hidden; transition:border-color .15s, background .15s;}
   /* Toning: unmissable — border, glow and background all change, plus a moving sweep bar */
-  .hero.toning{border-color:var(--tone); background:#211a10; animation:heroPulse 1.2s ease-in-out infinite;}
+  .hero.toning{border-color:var(--tone); background:#0d2b30; animation:heroPulse 1.2s ease-in-out infinite;}
   @keyframes heroPulse{
     0%,100%{ box-shadow:0 0 0 0 var(--tone-glow); }
     50%    { box-shadow:0 0 22px 6px var(--tone-glow); }
@@ -178,10 +189,10 @@
 <section class="screen on" id="screen-login">
   <div class="centre"><div class="card">
     <div class="logo">
-      <svg class="fork" viewBox="0 0 24 24" fill="none" stroke="#ffab2e" stroke-width="2" stroke-linecap="round"><path d="M8 3v7a4 4 0 0 0 8 0V3"/><path d="M12 14v7"/></svg>
+      <img class="brandlogo" src="logo.png" alt="Motion">
       <h1>Tone Tester</h1>
     </div>
-    <p class="sub">Sign in with your FMS credentials. Login goes to the relay, which talks to EXFO on your behalf — your password never reaches EXFO from this device directly, and your EXFO token never lands on the phone.</p>
+    <p class="sub">Sign in with your EXFO FMS credentials. Your token is held by the relay, never on this device.</p>
 
     <div class="statusline"><span id="modeBadge" class="badge demo">Demo</span><span id="modeText">No relay set — running in demo mode (tones are simulated).</span></div>
 
@@ -204,7 +215,7 @@
 <!-- ════════ ROUTE ════════ -->
 <section class="screen" id="screen-route">
   <div class="centre"><div class="card">
-    <div class="logo"><svg class="fork" viewBox="0 0 24 24" fill="none" stroke="#ffab2e" stroke-width="2" stroke-linecap="round"><path d="M8 3v7a4 4 0 0 0 8 0V3"/><path d="M12 14v7"/></svg><h1>Select cable</h1></div>
+    <div class="logo"><img class="brandlogo" src="logo.png" alt="Motion"><h1>Select cable</h1></div>
     <p class="sub">Search FMS for the cable, then tap it. No typing the full route.</p>
 
     <label class="fld" for="inSearch">Search (e.g. SNBC, RGAC)</label>
@@ -240,10 +251,13 @@
   <header>
     <div class="top-row">
       <button class="icon-btn" id="backToCable" aria-label="Change cable">‹</button>
+      <img class="hdrlogo" src="mark.png" alt="Motion">
       <div class="route-ref"><span id="hRoute">F-RGAC-SNBC-A-R432</span><small id="hUser">signed in</small></div>
       <span id="testModeBadge" class="badge demo">Demo</span>
+      <button class="icon-btn" id="openLoc" aria-label="Location">⚑</button>
       <button class="icon-btn" id="openSettings" aria-label="Settings">⚙</button>
     </div>
+    <div class="locbar" id="locBar"></div>
     <div class="progress-row">
       <div class="bar"><i id="bar"></i></div>
       <div class="counts"><b id="cDone">0</b>/432 · <span class="of" id="cOff">0</span> off · <span id="cLeft">432</span> left</div>
@@ -327,6 +341,18 @@
   <div class="row2"><button class="btn-wide danger" id="issueClear">Clear</button><button class="btn-wide" id="issueSave">Save issue</button></div>
 </div>
 
+<!-- Location -->
+<div class="sheet-bg" id="locBg"></div>
+<div class="sheet" id="locSheet">
+  <h2>Test location</h2>
+  <p class="hint">Where the tester / clamp is working. Appears on the report.</p>
+  <label class="fld" for="locJoint">Joint / chamber / node</label>
+  <input type="text" id="locJoint" placeholder="e.g. JNT-014, Chamber 27, NRS-305" autocomplete="off">
+  <label class="fld" for="locNote">Detail (optional)</label>
+  <input type="text" id="locNote" placeholder="e.g. down-line side, ELR SWM 42m 15ch" autocomplete="off">
+  <div class="row2"><button class="btn-wide" id="locSave">Save</button></div>
+</div>
+
 <!-- Completion -->
 <div class="fin" id="fin">
   <div class="tick">✓</div>
@@ -334,8 +360,15 @@
   <div class="summ" id="finSumm"></div>
   <div class="block" id="finOffBlock"><h3>Marked off / not detected</h3><div id="finOff"></div></div>
   <div class="block" id="finIssueBlock"><h3>Recorded issues</h3><div id="finIssues"></div></div>
-  <button class="primary" id="finCopy" style="margin-bottom:8px;">Copy report</button>
-  <button class="primary ghost" id="finClose">Back to testing</button>
+  <div class="row2" style="margin-top:0;">
+    <button class="btn-wide" id="finShare">Share</button>
+    <button class="btn-wide" id="finEmail">Email</button>
+  </div>
+  <div class="row2">
+    <button class="btn-wide" id="finPdf">Save as PDF</button>
+    <button class="btn-wide" id="finCopy">Copy text</button>
+  </div>
+  <button class="primary ghost" id="finClose" style="margin-top:10px;">Back to testing</button>
 </div>
 
 <script>
@@ -351,9 +384,15 @@
   const CFG="toneTester.cfg", SES="toneTester.session", RUN="toneTester.run";
 
   // ── persisted config ──
-  let cfg={relay:"", key:"", wl:"1550", dur:"10", freq:"1000"};
+  // Relay defaults. NOTE: anything shipped to the browser is readable by anyone who
+// opens the page. Real protection is APP_ORIGIN on the relay, which restricts
+// which site may call it. Do not treat APP_KEY as a secret.
+  const DEFAULT_RELAY="https://relay-njqb.onrender.com";
+  const DEFAULT_KEY="b5iFJmAOoifTKyrlDjdZt_mLrZZCrrhO";
+  let cfg={relay:DEFAULT_RELAY, key:DEFAULT_KEY, wl:"1550", dur:"10", freq:"330"};
   let session={id:"", user:""};
-  let route="", rtuId="", rtuName="", rtuSite="";
+  let route="", rtuId="", rtuName="", rtuSite="", rtuOnline=true;
+let location_="";   // joint / chamber / location of the tester
   let status=new Array(TOTAL).fill("pending"); // pending|done|off
   let issues={};                               // index -> note
   let current=0, viewRib=0;
@@ -362,7 +401,7 @@
   const jget=(k,d)=>{ try{const v=JSON.parse(localStorage.getItem(k)); return v==null?d:v;}catch(e){return d;} };
   const jset=(k,v)=>{ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} };
   const saveCfg=()=>jset(CFG,cfg), saveSes=()=>jset(SES,session);
-  const saveRun=()=>jset(RUN,{route,rtuId,rtuName,rtuSite,status,issues,current,viewRib});
+  const saveRun=()=>jset(RUN,{route,rtuId,rtuName,rtuSite,rtuOnline,location_,status,issues,current,viewRib});
 
   const ribOf=i=>Math.floor(i/PER), posOf=i=>i%PER;
   const label=i=>"F"+String(i+1).padStart(3,"0");
@@ -398,7 +437,7 @@
   }
 
   async function fireTone(i){
-    const body={fibre:fibName(i), stem:route, rtuId:rtuId, wavelengthNm:+cfg.wl, durationS:+cfg.dur, freqHz:+cfg.freq};
+    const body={fibre:fibName(i), stem:route, rtuId:rtuId, force:!rtuOnline, wavelengthNm:+cfg.wl, durationS:+cfg.dur, freqHz:+cfg.freq};
     if(isDemo()){ return {ok:true,simulated:true}; }
     return relay("/api/tone",body);
   }
@@ -504,10 +543,102 @@
     const offs=[],iss=[]; let done=0;
     status.forEach((s,i)=>{ if(s==="done")done++; if(s==="off")offs.push(label(i)); });
     Object.keys(issues).forEach(i=>iss.push(label(+i)+": "+issues[i]));
-    return ["Fibre tone test — "+route,"Date: "+new Date().toLocaleString("en-GB"),
-      "Tester: "+(session.user||"demo"),"Toned from RTU: "+((rtuName||rtuId)?(rtuName||rtuId)+(rtuSite?" ("+rtuSite+")":""):"not recorded"),"Params: "+cfg.wl+"nm / "+cfg.dur+"s / "+cfg.freq+"Hz","",
-      "Confirmed: "+done+"/"+TOTAL,"Off / not detected: "+(offs.join(", ")||"none"),
-      "","Issues:",...(iss.length?iss:["none"])].join("\n");
+    return ["FIBRE TONE TEST REPORT","="
+      .repeat(28),
+      "Cable:      "+route,
+      "Toned from: "+((rtuName||rtuId)?(rtuName||rtuId)+(rtuSite?" ("+rtuSite+")":""):"not recorded"),
+      "Location:   "+(location_||"not recorded"),
+      "Tester:     "+(session.user||"demo"),
+      "Date:       "+new Date().toLocaleString("en-GB"),
+      "Parameters: "+cfg.wl+" nm / "+cfg.dur+" s / "+cfg.freq+" Hz",
+      "",
+      "RESULT",
+      "Confirmed:        "+done+" of "+TOTAL,
+      "Not detected:     "+offs.length,
+      "Issues recorded:  "+iss.length,
+      "",
+      "NOT DETECTED / MARKED OFF",
+      (offs.length?offs.join(", "):"none"),
+      "",
+      "ISSUES",
+      ...(iss.length?iss:["none"]),
+      "",
+      "Generated by Motion Tone Tester"].join("\n");
+  }
+
+  function reportHTML(){
+    const offs=[],iss=[]; let done=0;
+    status.forEach((s,i)=>{ if(s==="done")done++; if(s==="off")offs.push(label(i)); });
+    Object.keys(issues).forEach(i=>iss.push({f:label(+i),n:issues[i]}));
+    const esc=t=>String(t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+    return `<!doctype html><html><head><meta charset="utf-8"><title>Tone test — ${esc(route)}</title>
+    <style>
+      @page{size:A4;margin:16mm}
+      body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#111;font-size:12px;line-height:1.5}
+      h1{font-size:17px;margin:0 0 2px;color:#016976}
+      .sub{color:#666;font-size:11px;margin-bottom:14px}
+      table{border-collapse:collapse;width:100%;margin-bottom:14px}
+      td,th{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
+      th{background:#f2f7f8;width:170px;font-weight:600}
+      h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#016976;margin:16px 0 6px}
+      .big{font-size:20px;font-weight:700}
+      .off{color:#c00} .ok{color:#0a7a2f}
+      .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+      .foot{margin-top:22px;color:#888;font-size:10px;border-top:1px solid #eee;padding-top:8px}
+    </style></head><body>
+    <h1>Fibre Tone Test Report</h1>
+    <div class="sub">${esc(new Date().toLocaleString("en-GB"))}</div>
+    <table>
+      <tr><th>Cable</th><td class="mono">${esc(route)}</td></tr>
+      <tr><th>Toned from RTU</th><td>${esc((rtuName||rtuId)||"not recorded")}${rtuSite?" — "+esc(rtuSite):""}</td></tr>
+      <tr><th>Test location</th><td>${esc(location_||"not recorded")}</td></tr>
+      <tr><th>Tester</th><td>${esc(session.user||"demo")}</td></tr>
+      <tr><th>Parameters</th><td>${esc(cfg.wl)} nm · ${esc(cfg.dur)} s · ${esc(cfg.freq)} Hz modulation</td></tr>
+    </table>
+    <h2>Result</h2>
+    <table>
+      <tr><th>Fibres confirmed</th><td class="big ok">${done} / ${TOTAL}</td></tr>
+      <tr><th>Not detected</th><td class="big ${offs.length?"off":""}">${offs.length}</td></tr>
+      <tr><th>Issues recorded</th><td class="big">${iss.length}</td></tr>
+    </table>
+    <h2>Not detected / marked off</h2>
+    <p class="mono">${offs.length?esc(offs.join(", ")):"None"}</p>
+    <h2>Issues</h2>
+    ${iss.length?("<table><tr><th>Fibre</th><th style='width:auto'>Note</th></tr>"+
+       iss.map(o=>`<tr><td class="mono">${esc(o.f)}</td><td>${esc(o.n)}</td></tr>`).join("")+"</table>")
+      :"<p>None</p>"}
+    <div class="foot">Generated by Motion Tone Tester · EXFO FMS · ${esc(route)}</div>
+    </body></html>`;
+  }
+
+  function reportFilename(){
+    const d=new Date().toISOString().slice(0,10);
+    return "tone-test_"+route.replace(/[^A-Z0-9-]/gi,"_")+"_"+d;
+  }
+
+  // Share sheet (iOS/Android): hands off to Mail, WhatsApp, Files…
+  async function shareReport(){
+    const txt=report();
+    if(navigator.share){
+      try{ await navigator.share({title:"Tone test — "+route, text:txt}); return; }catch(e){ if(e.name==="AbortError") return; }
+    }
+    // desktop / unsupported: fall back to email
+    emailReport();
+  }
+  function emailReport(){
+    const subj="Fibre tone test — "+route+(location_?" — "+location_:"");
+    const url="mailto:?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(report());
+    window.location.href=url;
+  }
+  // PDF via the print dialog → "Save as PDF" (works on iOS, Android, desktop)
+  function pdfReport(){
+    const w=window.open("","_blank");
+    if(!w){ alert("Allow pop-ups to produce the PDF."); return; }
+    w.document.write(reportHTML());
+    w.document.title=reportFilename();
+    w.document.close();
+    w.focus();
+    setTimeout(()=>{ w.print(); },350);
   }
 
   // ── link status ──
@@ -538,6 +669,22 @@
     $("modeText").textContent=demo?"No relay set — running in demo mode (tones are simulated).":"Relay configured — sign in to go live.";
   }
 
+  // ── location ──
+  let locJointV="", locNoteV="";
+  const openLoc=()=>{ $("locJoint").value=locJointV; $("locNote").value=locNoteV; $("locBg").classList.add("open"); $("locSheet").classList.add("open"); };
+  const closeLoc=()=>{ $("locBg").classList.remove("open"); $("locSheet").classList.remove("open"); };
+  $("openLoc").onclick=openLoc; $("locBg").onclick=closeLoc;
+  $("locSave").onclick=()=>{
+    locJointV=$("locJoint").value.trim(); locNoteV=$("locNote").value.trim();
+    location_=[locJointV,locNoteV].filter(Boolean).join(" — ");
+    jset("toneTester.loc",{j:locJointV,n:locNoteV});
+    closeLoc(); renderLocBar(); saveRun();
+  };
+  function renderLocBar(){
+    $("locBar").innerHTML = location_ ? ("\u2691 <b>"+location_.replace(/</g,"&lt;")+"</b>")
+                                      : '<span style="opacity:.7">\u2691 Tap the flag to set the test location</span>';
+  }
+
   // ── issue modal ──
   const openIssue=()=>{ $("issueTitle").textContent="Record issue — "+label(current); $("issueText").value=issues[current]||""; $("issueBg").classList.add("open"); $("issueSheet").classList.add("open"); };
   const closeIssue=()=>{ $("issueBg").classList.remove("open"); $("issueSheet").classList.remove("open"); };
@@ -547,7 +694,10 @@
 
   // ── completion buttons ──
   $("finClose").onclick=()=>$("fin").classList.remove("show");
-  $("finCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText(report()); $("finCopy").textContent="Copied ✓"; setTimeout(()=>$("finCopy").textContent="Copy report",1500);}catch(e){ alert(report()); } };
+  $("finCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText(report()); $("finCopy").textContent="Copied ✓"; setTimeout(()=>$("finCopy").textContent="Copy text",1500);}catch(e){ alert(report()); } };
+  $("finShare").onclick=shareReport;
+  $("finEmail").onclick=emailReport;
+  $("finPdf").onclick=pdfReport;
 
   // ── test actions ──
   $("nextBtn").onclick=next; $("backBtn").onclick=back; $("repeatBtn").onclick=repeat; $("offBtn").onclick=toggleOff;
@@ -581,7 +731,7 @@
   $("manualLink").onclick=()=>{ const w=$("manualWrap"); w.style.display = w.style.display==="none"?"block":"none"; };
   $("startTestBtn").onclick=()=>{ const v=$("inRoute").value.trim().toUpperCase(); if(!v){$("inRoute").focus();return;}
     if(!isDemo() && !confirm("No RTU selected.\n\nThis cable is visible from both ends, so live toning needs an RTU. Searching and tapping the cable is safer.\n\nContinue anyway?")) return;
-    beginRoute(v,"","",""); };
+    beginRoute(v,"","","",true); };
   $("searchBtn").onclick=()=>doSearch();
   $("inSearch").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();doSearch();} });
 
@@ -589,9 +739,9 @@
   $("backToCable").onclick=()=>{ clearInterval(cdTimer); toning=false; $("hero").classList.remove("toning"); saveRun(); gotoRoute(); };
 
   const DEMO_CABLES=[
-    {stem:"F-RGAC-SNBC-A-R432",rtuId:"27530",rtuName:"RTU-RGAC-01",site:"Reading",fibres:432},
-    {stem:"F-RGAC-SNBC-A-R432",rtuId:"27891",rtuName:"RTU-SNBC-01",site:"Swindon",fibres:432},
-    {stem:"F-ABDR-RHYM-A-R432",rtuId:"31002",rtuName:"RTU-ABDR-01",site:"Aberdare",fibres:432}];
+    {stem:"F-RGAC-SNBC-A-R432",rtuId:"27530",rtuName:"RTU-RGAC-01",site:"Reading",fibres:432,online:true,attachStatus:"ATTACHED"},
+    {stem:"F-RGAC-SNBC-A-R432",rtuId:"27891",rtuName:"RTU-SNBC-01",site:"Swindon",fibres:432,online:false,attachStatus:"DETACHED"},
+    {stem:"F-ABDR-RHYM-A-R432",rtuId:"31002",rtuName:"RTU-ABDR-01",site:"Aberdare",fibres:432,online:true,attachStatus:"ATTACHED"}];
 
   async function doSearch(){
     const q=$("inSearch").value.trim();
@@ -603,22 +753,28 @@
       else { const d=await relay("/api/routes",{search:q}); cables=d.cables||[]; }
       if(!cables.length){ $("cableStatus").textContent="No cables matched \u201c"+q+"\u201d."; return; }
       $("cableStatus").textContent=cables.length+" cable"+(cables.length>1?"s":"")+" found — tap to start:";
-      $("cableList").innerHTML=cables.map((c,i)=>
-        '<div class="cable-row" data-i="'+i+'">'+
+      $("cableList").innerHTML=cables.map((c,i)=>{
+        const on=!!c.online, tag=on?"Online":(c.attachStatus||"Offline");
+        return '<div class="cable-row'+(on?'':' offline')+'" data-i="'+i+'">'+
           '<div class="cinfo">'+
             '<div class="cs mono">'+c.stem+'</div>'+
-            '<div class="crtu">Tone from <b>'+(c.rtuName||c.rtuId||"?")+'</b>'+(c.site?' \u00b7 '+c.site:'')+'</div>'+
+            '<div class="crtu"><span class="rtu-dot '+(on?'on':'off')+'"></span>'+
+              '<b>'+(c.rtuName||c.rtuId||"?")+'</b>'+(c.site?' \u00b7 '+c.site:'')+
+              ' <span class="rtu-tag '+(on?'on':'off')+'">'+tag+'</span></div>'+
           '</div>'+
           '<span class="cf mono">'+c.fibres+'</span>'+
-        '</div>').join("");
+        '</div>';}).join("");
       $("cableList").querySelectorAll("[data-i]").forEach(el=>{
-        el.onclick=()=>{ const c=cables[+el.getAttribute("data-i")]; beginRoute(c.stem,c.rtuId,c.rtuName,c.site); };
+        el.onclick=()=>{ const c=cables[+el.getAttribute("data-i")];
+          if(!c.online && !confirm((c.rtuName||c.rtuId)+" is "+(c.attachStatus||"offline")+".\n\nAn offline RTU cannot emit a tone. Open anyway (read-only)?")) return;
+          beginRoute(c.stem,c.rtuId,c.rtuName,c.site,c.online);
+        };
       });
     }catch(e){ $("cableStatus").textContent="Search failed: "+e.message; }
   }
 
-  function beginRoute(v, rid, rname, rsite){
-    route=v; rtuId=rid||""; rtuName=rname||""; rtuSite=rsite||"";
+  function beginRoute(v, rid, rname, rsite, online){
+    route=v; rtuId=rid||""; rtuName=rname||""; rtuSite=rsite||""; rtuOnline=(online!==false);
     // recents remember the RTU too — the same cable at the other end is a different run
     const rec=jget("toneTester.recent",[]).filter(r=>!(r.stem===v && r.rtuId===rtuId));
     rec.unshift({stem:v,rtuId:rtuId,rtuName:rtuName,site:rtuSite});
@@ -648,16 +804,22 @@
           '<div class="crtu">'+(r.rtuName||r.rtuId?('Tone from <b>'+(r.rtuName||r.rtuId)+'</b>'+(r.site?' \u00b7 '+r.site:'')):'no RTU recorded')+'</div></div>'+
           '<span class="cf">resume</span></div>').join("");
       $("recentList").querySelectorAll("[data-i]").forEach(el=>el.onclick=()=>{
-        const r=norm[+el.getAttribute("data-i")]; beginRoute(r.stem,r.rtuId,r.rtuName,r.site); });
+        const r=norm[+el.getAttribute("data-i")]; beginRoute(r.stem,r.rtuId,r.rtuName,r.site,true); });
     }
   }
 
   // ── init ──
-  cfg=Object.assign(cfg,jget(CFG,{})); session=jget(SES,session);
-  { const pr=jget(RUN,null); if(pr){ rtuId=pr.rtuId||""; rtuName=pr.rtuName||""; rtuSite=pr.rtuSite||""; } }
+  { const saved=jget(CFG,{}) || {};
+    Object.keys(saved).forEach(k=>{ if(saved[k]!=="" && saved[k]!=null) cfg[k]=saved[k]; });
+    if(!cfg.relay) cfg.relay=DEFAULT_RELAY;
+    if(!cfg.key)   cfg.key=DEFAULT_KEY;
+  }
+  session=jget(SES,session);
+  { const pr=jget(RUN,null); if(pr){ rtuId=pr.rtuId||""; rtuName=pr.rtuName||""; rtuSite=pr.rtuSite||""; rtuOnline=pr.rtuOnline!==false; location_=pr.location_||""; } }
   $("cfgRelay").value=cfg.relay; $("cfgKey").value=cfg.key;
   $("cfgWl").value=cfg.wl; $("cfgDur").value=cfg.dur; $("cfgFreq").value=cfg.freq;
-  syncMode(); syncParams();
+  { const L=jget('toneTester.loc',null); if(L){ locJointV=L.j||''; locNoteV=L.n||''; location_=[locJointV,locNoteV].filter(Boolean).join(' \u2014 '); } }
+  syncMode(); syncParams(); renderLocBar();
   if(session.id){ gotoRoute(); } else { show("screen-login"); }
 
   // service worker (only when hosted over http/https)

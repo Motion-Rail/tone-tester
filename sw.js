@@ -1,7 +1,7 @@
 // Minimal offline shell. Bump CACHE to force an update after editing the app.
-const CACHE = "tonetester-v1";
+const CACHE = "tonetester-v4";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest",
-                "./icons/icon-192.png", "./icons/icon-512.png"];
+                "./icons/icon-192.png", "./icons/icon-512.png", "./logo.png", "./mark.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
