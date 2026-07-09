@@ -20,6 +20,7 @@
     --done:#2ea043; --done-dim:#123a1e;
     --pend:#3a4657;
     --off:#e5484d; --off-dim:#3a171a;
+    --cross:#a371f7; --cross-dim:#2a1b45;
     --accent:#16b6c9;
   }
   html,body{height:100%;}
@@ -48,7 +49,6 @@
   .primary.ghost{background:var(--surface2); border:1px solid var(--border); color:var(--text);}
   .linkbtn{background:none; border:none; color:var(--accent); font-size:.82rem; cursor:pointer; padding:6px;}
   .badge{font-size:.6rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; padding:3px 7px; border-radius:5px;}
-  .badge.demo{background:var(--tone); color:#000;}
   .badge.live{background:var(--done); color:#fff;}
   .err{color:var(--off); font-size:.8rem; margin-top:10px; min-height:1em;}
 
@@ -84,13 +84,18 @@
   .route-ref small{display:block; font-weight:400; color:var(--muted); font-size:.66rem;}
   .icon-btn{flex:0 0 auto; width:36px; height:32px; border-radius:7px; background:var(--surface2); border:1px solid var(--border); color:var(--muted); font-size:1rem; cursor:pointer;}
   .icon-btn:active{background:var(--border);}
-  .locbar{font-size:.68rem; color:var(--muted); padding:2px 0 0;}
-  .locbar b{color:var(--tone);}
+  .locbar{display:flex; align-items:center; gap:8px; margin:8px 0 2px; padding:9px 11px;
+          border-radius:9px; font-size:.76rem; cursor:pointer; border:1px solid var(--border); background:var(--surface2);}
+  .locbar b{color:var(--tone); font-weight:700;}
+  .locbar.unset{background:var(--off-dim); border:1px solid var(--off); color:var(--off); font-weight:700;
+                animation:locNag 1.6s ease-in-out infinite;}
+  @keyframes locNag{0%,100%{opacity:1}50%{opacity:.62}}
+  .locbar .lch{margin-left:auto; font-size:.64rem; color:var(--muted); font-weight:600;}
   .progress-row{display:flex; align-items:center; gap:10px; padding:8px 0 10px;}
   .bar{flex:1; height:7px; border-radius:4px; background:var(--surface2); overflow:hidden;}
   .bar>i{display:block; height:100%; width:0; background:var(--done); transition:width .18s ease;}
   .counts{font-size:.72rem; color:var(--muted); white-space:nowrap;}
-  .counts b{color:var(--text);} .counts .of{color:var(--off);}
+  .counts b{color:var(--text);} .counts .of{color:var(--off);} .counts .cx{color:var(--cross);}
 
   .params{display:flex; gap:6px; padding:8px 12px; background:var(--surface); border-bottom:1px solid var(--border); flex:0 0 auto;}
   .param{flex:1; text-align:center; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:6px 4px;}
@@ -105,7 +110,8 @@
   .dots{display:grid; grid-template-columns:repeat(18,1fr); gap:4px;}
   .dot{aspect-ratio:1; border-radius:3px; background:var(--pend); opacity:.55; cursor:pointer;}
   .dot.partial{background:var(--tone); opacity:.9;} .dot.done{background:var(--done); opacity:1;}
-  .dot.hasoff{background:var(--off); opacity:.9;} .dot.here{outline:2px solid var(--text); outline-offset:1px; opacity:1;}
+  .dot.hasoff{background:var(--off); opacity:.9;}
+  .dot.hascross{background:var(--cross); opacity:.9;} .dot.here{outline:2px solid var(--text); outline-offset:1px; opacity:1;}
 
   main{flex:1 1 auto; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:12px;}
   .hero{position:relative; border-radius:16px; padding:16px; background:var(--surface); border:2px solid var(--border); display:flex; align-items:center; gap:16px; overflow:hidden; transition:border-color .15s, background .15s;}
@@ -130,7 +136,7 @@
   .fib-no{font-size:2.6rem; font-weight:800; line-height:1;}
   .fib-sub{margin-top:5px; font-size:.8rem; color:var(--muted);} .fib-sub b{color:var(--text);}
   .state-tag{display:inline-flex; align-items:center; gap:6px; margin-top:8px; font-size:.66rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;}
-  .state-tag.toning{color:var(--tone);} .state-tag.idle{color:var(--muted);} .state-tag.doneT{color:var(--done);} .state-tag.offT{color:var(--off);}
+  .state-tag.toning{color:var(--tone);} .state-tag.idle{color:var(--muted);} .state-tag.doneT{color:var(--done);} .state-tag.offT{color:var(--off);} .state-tag.crossT{color:var(--cross);}
   .state-tag .led{width:8px; height:8px; border-radius:50%; background:currentColor;}
   .state-tag.toning .led{box-shadow:0 0 8px var(--tone); animation:pulse 1.5s infinite;}
   .countdown{height:5px; border-radius:3px; background:var(--surface2); overflow:hidden; margin-top:10px;}
@@ -144,13 +150,22 @@
   .cell .cband{width:26px; height:6px; border-radius:3px; border:1px solid rgba(255,255,255,.14);}
   .cell .ccol{font-size:.6rem; color:var(--muted);}
   .cell.done{background:var(--done-dim); border-color:var(--done);} .cell.done .cno{color:var(--done);}
-  .cell.off{background:var(--off-dim); border-color:var(--off);} .cell.off .cno{color:var(--off);}
+  .cell.dis{background:var(--off-dim); border-color:var(--off);} .cell.dis .cno{color:var(--off);}
+  .cell.cross{background:var(--cross-dim); border-color:var(--cross);} .cell.cross .cno{color:var(--cross);}
+  .cell .xmark{position:absolute; top:5px; left:5px; font-size:.6rem; color:var(--cross); font-weight:800;}
   .cell.here{outline:2px solid var(--tone); border-color:var(--tone);}
   .cell .flagdot{position:absolute; top:5px; right:5px; width:7px; height:7px; border-radius:50%; background:var(--tone);}
 
   .actions{flex:0 0 auto; background:var(--surface); border-top:1px solid var(--border); padding:8px 12px 10px;}
-  .act-row{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:8px;}
-  .act{border:1px solid var(--border); background:var(--surface2); border-radius:10px; padding:9px 4px; color:var(--text); font-size:.72rem; font-weight:600; cursor:pointer;}
+  .act-row{display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin-bottom:8px;}
+  .next-row{display:grid; grid-template-columns:1fr 106px; gap:8px;}
+  .act.crossbtn{color:var(--cross);} .act.crossbtn.on{background:var(--cross-dim); border-color:var(--cross);}
+  .finish{border:1px solid var(--border); background:var(--surface2); color:var(--text); border-radius:12px;
+          font-weight:800; font-size:.8rem; cursor:pointer; display:flex; flex-direction:column;
+          align-items:center; justify-content:center; line-height:1.2;}
+  .finish span{font-size:.6rem; font-weight:600; color:var(--muted);}
+  .finish:active{transform:translateY(1px);}
+  .act{border:1px solid var(--border); background:var(--surface2); border-radius:10px; padding:9px 2px; color:var(--text); font-size:.68rem; font-weight:600; cursor:pointer;}
   .act:active{transform:translateY(1px);}
   .act.off{color:var(--off);} .act.off.on{background:var(--off-dim); border-color:var(--off);}
   .next{width:100%; border:none; border-radius:12px; background:var(--done); color:#fff; padding:15px; font-size:1.1rem; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;}
@@ -194,7 +209,6 @@
     </div>
     <p class="sub">Sign in with your EXFO FMS credentials. Your token is held by the relay, never on this device.</p>
 
-    <div class="statusline"><span id="modeBadge" class="badge demo">Demo</span><span id="modeText">No relay set — running in demo mode (tones are simulated).</span></div>
 
     <label class="fld" for="inUser">FMS username</label>
     <input type="text" id="inUser" autocomplete="username" placeholder="your.name">
@@ -207,7 +221,6 @@
 
     <div style="text-align:center; margin-top:14px;">
       <button class="linkbtn" id="cfgLink">Relay settings</button>
-      <button class="linkbtn" id="demoLink">Skip — try demo</button>
     </div>
   </div></div>
 </section>
@@ -253,14 +266,14 @@
       <button class="icon-btn" id="backToCable" aria-label="Change cable">‹</button>
       <img class="hdrlogo" src="mark.png" alt="Motion">
       <div class="route-ref"><span id="hRoute">F-RGAC-SNBC-A-R432</span><small id="hUser">signed in</small></div>
-      <span id="testModeBadge" class="badge demo">Demo</span>
+      <span id="testModeBadge" class="badge live">Live</span>
       <button class="icon-btn" id="openLoc" aria-label="Location">⚑</button>
       <button class="icon-btn" id="openSettings" aria-label="Settings">⚙</button>
     </div>
     <div class="locbar" id="locBar"></div>
     <div class="progress-row">
       <div class="bar"><i id="bar"></i></div>
-      <div class="counts"><b id="cDone">0</b>/432 · <span class="of" id="cOff">0</span> off · <span id="cLeft">432</span> left</div>
+      <div class="counts"><b id="cDone">0</b>/432 · <span class="of" id="cOff">0</span> dis · <span class="cx" id="cCross">0</span> cross · <span id="cLeft">432</span> left</div>
     </div>
   </header>
 
@@ -296,16 +309,20 @@
     <div class="grid" id="grid"></div>
   </main>
 
-  <div class="kbd-hint">Space / → Next · ← Back · R Repeat · F Off (Bluetooth clicker friendly)</div>
+  <div class="kbd-hint">Space / → Next · ← Back · R Repeat · D Dis · X Cross</div>
 
   <div class="actions">
     <div class="act-row">
       <button class="act" id="backBtn">◂ Back</button>
       <button class="act" id="repeatBtn">⟳ Repeat</button>
-      <button class="act off" id="offBtn">⌀ Off</button>
+      <button class="act off" id="disBtn">DIS</button>
+      <button class="act crossbtn" id="crossBtn">✕ Cross</button>
       <button class="act" id="issueBtn">✎ Issue</button>
     </div>
-    <button class="next" id="nextBtn"><span>NEXT ▸</span><span class="nx-target mono" id="nxTarget">F002 · R1</span></button>
+    <div class="next-row">
+      <button class="next" id="nextBtn"><span>NEXT ▸</span><span class="nx-target mono" id="nxTarget">F002 · R1</span></button>
+      <button class="finish" id="finishNow">FINISH<span>&amp; report</span></button>
+    </div>
   </div>
 </section>
 
@@ -313,7 +330,7 @@
 <div class="sheet-bg" id="sheetBg"></div>
 <div class="sheet" id="sheet">
   <h2>Settings</h2>
-  <p class="hint">The relay is the small service that holds your EXFO token and forwards tone requests. Leave the URL blank to run in demo mode.</p>
+  <p class="hint">The relay holds your EXFO token and forwards tone requests. These are pre-configured — only change them if told to.</p>
   <label class="fld" for="cfgRelay">Relay URL</label>
   <input type="text" id="cfgRelay" placeholder="https://your-relay.onrender.com" autocomplete="off">
   <label class="fld" for="cfgKey">App key (optional)</label>
@@ -341,6 +358,16 @@
   <div class="row2"><button class="btn-wide danger" id="issueClear">Clear</button><button class="btn-wide" id="issueSave">Save issue</button></div>
 </div>
 
+<!-- Cross -->
+<div class="sheet-bg" id="crossBg"></div>
+<div class="sheet" id="crossSheet">
+  <h2 id="crossTitle">Mark crossed — F001</h2>
+  <p class="hint">Record which fibre the tone actually appeared on, so the splicer knows what to correct.</p>
+  <label class="fld" for="crossWith">Crossed with</label>
+  <input type="text" id="crossWith" placeholder="e.g. F014, or R2 pos 3, or unknown" autocomplete="off">
+  <div class="row2"><button class="btn-wide danger" id="crossClear">Clear</button><button class="btn-wide" id="crossSave">Mark crossed</button></div>
+</div>
+
 <!-- Location -->
 <div class="sheet-bg" id="locBg"></div>
 <div class="sheet" id="locSheet">
@@ -358,7 +385,8 @@
   <div class="tick">✓</div>
   <h2>Session summary</h2>
   <div class="summ" id="finSumm"></div>
-  <div class="block" id="finOffBlock"><h3>Marked off / not detected</h3><div id="finOff"></div></div>
+  <div class="block" id="finOffBlock"><h3>DIS — no tone detected</h3><div id="finOff"></div></div>
+  <div class="block"><h3>Crossed fibres</h3><div id="finCross"></div></div>
   <div class="block" id="finIssueBlock"><h3>Recorded issues</h3><div id="finIssues"></div></div>
   <div class="row2" style="margin-top:0;">
     <button class="btn-wide" id="finShare">Share</button>
@@ -393,7 +421,8 @@
   let session={id:"", user:""};
   let route="", rtuId="", rtuName="", rtuSite="", rtuOnline=true;
 let location_="";   // joint / chamber / location of the tester
-  let status=new Array(TOTAL).fill("pending"); // pending|done|off
+  let status=new Array(TOTAL).fill("pending"); // pending | done | dis | cross
+let crosses={};                              // index -> "crossed with ..."
   let issues={};                               // index -> note
   let current=0, viewRib=0;
   let toning=false, cdTimer=null;
@@ -401,13 +430,12 @@ let location_="";   // joint / chamber / location of the tester
   const jget=(k,d)=>{ try{const v=JSON.parse(localStorage.getItem(k)); return v==null?d:v;}catch(e){return d;} };
   const jset=(k,v)=>{ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} };
   const saveCfg=()=>jset(CFG,cfg), saveSes=()=>jset(SES,session);
-  const saveRun=()=>jset(RUN,{route,rtuId,rtuName,rtuSite,rtuOnline,location_,status,issues,current,viewRib});
+  const saveRun=()=>jset(RUN,{route,rtuId,rtuName,rtuSite,rtuOnline,location_,status,issues,crosses,current,viewRib});
 
   const ribOf=i=>Math.floor(i/PER), posOf=i=>i%PER;
   const label=i=>"F"+String(i+1).padStart(3,"0");
   const fibName=i=>route+"-"+label(i);
   const ribStart=r=>r*PER;
-  const isDemo=()=>!cfg.relay;
 
   function findNext(from){
     for(let i=from+1;i<TOTAL;i++) if(status[i]!=="done") return i;
@@ -430,15 +458,14 @@ let location_="";   // joint / chamber / location of the tester
   }
 
   async function doLogin(user,pass){
-    if(isDemo()){ session={id:"demo",user:user||"demo"}; saveSes(); return; }
     const d=await relay("/api/login",{username:user,password:pass});
     session={id:d.session_id||d.sessionId||"", user:user}; saveSes();
     if(!session.id) throw new Error("No session returned by relay");
   }
 
   async function fireTone(i){
-    const body={fibre:fibName(i), stem:route, rtuId:rtuId, force:!rtuOnline, wavelengthNm:+cfg.wl, durationS:+cfg.dur, freqHz:+cfg.freq};
-    if(isDemo()){ return {ok:true,simulated:true}; }
+    const body={fibre:fibName(i), stem:route, rtuId:rtuId, force:!rtuOnline,
+                wavelengthNm:+cfg.wl, durationS:+cfg.dur, freqHz:+cfg.freq};
     return relay("/api/tone",body);
   }
 
@@ -452,8 +479,9 @@ let location_="";   // joint / chamber / location of the tester
       const el=Date.now()-t0, frac=Math.max(0,1-el/total);
       $("cdBar").style.width=(frac*100)+"%";
       if(el>=total){ clearInterval(cdTimer); toning=false; $("hero").classList.remove("toning");
-        setState(status[current]==="off"?"offT":status[current]==="done"?"doneT":"idle",
-                 status[current]==="off"?"Marked off":status[current]==="done"?"Confirmed":"Tone ended — Repeat if needed"); }
+        const st=status[current];
+        setState(st==="dis"?"offT":st==="cross"?"crossT":st==="done"?"doneT":"idle",
+                 st==="dis"?"Marked DIS":st==="cross"?("CROSSED"+(crosses[current]?" with "+crosses[current]:"")):st==="done"?"Confirmed":"Tone ended — Repeat if needed"); }
     },100);
   }
   function setState(cls,txt){ const t=$("stateTag"); t.className="state-tag "+cls; $("stateText").textContent=txt; }
@@ -473,14 +501,18 @@ let location_="";   // joint / chamber / location of the tester
   // ── navigation ──
   function setCurrent(i){ current=i; viewRib=ribOf(i); render(); saveRun(); toneCurrent(); }
   function next(){
-    if(status[current]!=="off") status[current]="done";
+    if(status[current]!=="dis" && status[current]!=="cross") status[current]="done";
     const nx=findNext(current);
     if(nx===-1){ status[current]="done"; render(); saveRun(); finish(); return; }
     setCurrent(nx);
   }
   function back(){ if(current>0) setCurrent(current-1); }
   function repeat(){ toneCurrent(); }
-  function toggleOff(){ status[current]=status[current]==="off"?"pending":"off"; render(); saveRun(); }
+  function toggleDis(){ status[current]=status[current]==="dis"?"pending":"dis"; render(); saveRun(); }
+  function toggleCross(){
+    if(status[current]==="cross"){ status[current]="pending"; delete crosses[current]; render(); saveRun(); return; }
+    openCross();
+  }
   function jumpRibbon(r){
     r=(r+RIBBONS)%RIBBONS; const s=ribStart(r); let t=s;
     for(let p=0;p<PER;p++) if(status[s+p]!=="done"){ t=s+p; break; }
@@ -493,8 +525,12 @@ let location_="";   // joint / chamber / location of the tester
     $("fibNo").textContent=label(ci);
     $("hRib").textContent=r+1; $("hPos").textContent=p+1; $("hAll").textContent=ci+1;
     const sw=$("swatch"); sw.style.background=col.hex; sw.style.color=(p===5||p===4||p===8||p===10||p===11)?"#000":"#fff"; sw.textContent=col.n;
-    $("offBtn").classList.toggle("on",status[ci]==="off");
-    $("issueNote").textContent=issues[ci]?("⚑ "+issues[ci]):"";
+    $("disBtn").classList.toggle("on",status[ci]==="dis");
+    $("crossBtn").classList.toggle("on",status[ci]==="cross");
+    const notes=[];
+    if(status[ci]==="cross") notes.push("\u2715 Crossed"+(crosses[ci]?" with "+crosses[ci]:""));
+    if(issues[ci]) notes.push("\u2691 "+issues[ci]);
+    $("issueNote").textContent=notes.join("   ");
 
     const nx=findNext(ci), nb=$("nextBtn"), nt=$("nxTarget");
     if(nx===-1){ nb.classList.add("finished"); nb.querySelector("span").textContent="FINISH ✓"; nt.textContent="all confirmed"; }
@@ -506,9 +542,9 @@ let location_="";   // joint / chamber / location of the tester
 
     const dots=$("dots"); dots.innerHTML="";
     for(let rr=0;rr<RIBBONS;rr++){
-      let d=0,off=0; for(let k=0;k<PER;k++){const s=status[ribStart(rr)+k]; if(s==="done")d++; else if(s==="off")off++;}
+      let d=0,off=0,cr=0; for(let k=0;k<PER;k++){const s=status[ribStart(rr)+k]; if(s==="done")d++; else if(s==="dis")off++; else if(s==="cross")cr++;}
       const el=document.createElement("div");
-      el.className="dot"+(d===PER?" done":off>0?" hasoff":d>0?" partial":"")+(rr===viewRib?" here":"");
+      el.className="dot"+(d===PER?" done":off>0?" hasoff":cr>0?" hascross":d>0?" partial":"")+(rr===viewRib?" here":"");
       el.title="Ribbon "+(rr+1); el.onclick=()=>jumpRibbon(rr); dots.appendChild(el);
     }
 
@@ -517,48 +553,54 @@ let location_="";   // joint / chamber / location of the tester
       const gi=ribStart(viewRib)+k, gc=IEC[k];
       const cell=document.createElement("div");
       cell.className="cell "+status[gi]+(gi===ci?" here":"");
-      cell.innerHTML='<div class="cno mono">'+label(gi)+'</div><div class="cband" style="background:'+gc.hex+'"></div><div class="ccol">'+gc.n+'</div>'+(issues[gi]?'<div class="flagdot"></div>':'');
+      cell.innerHTML='<div class="cno mono">'+label(gi)+'</div><div class="cband" style="background:'+gc.hex+'"></div><div class="ccol">'+gc.n+'</div>'+(issues[gi]?'<div class="flagdot"></div>':'')+(status[gi]==="cross"?'<div class="xmark">\u2715</div>':'');
       cell.onclick=()=>setCurrent(gi); grid.appendChild(cell);
     }
 
-    let done=0,off=0; for(const s of status){ if(s==="done")done++; else if(s==="off")off++; }
-    $("cDone").textContent=done; $("cOff").textContent=off; $("cLeft").textContent=TOTAL-done-off;
+    let done=0,dis=0,cr=0; for(const s of status){ if(s==="done")done++; else if(s==="dis")dis++; else if(s==="cross")cr++; }
+    $("cDone").textContent=done; $("cOff").textContent=dis; $("cCross").textContent=cr;
+    $("cLeft").textContent=TOTAL-done-dis-cr;
     $("bar").style.width=(done/TOTAL*100)+"%";
     $("hRoute").textContent=route;
-    $("hUser").textContent=(rtuName||rtuId)?("Tone from "+(rtuName||rtuId)+(rtuSite?" · "+rtuSite:"")):(session.user?("signed in · "+session.user):"demo mode");
-    const badge=$("testModeBadge"); badge.className="badge "+(isDemo()?"demo":"live"); badge.textContent=isDemo()?"Demo":"Live";
+    $("hUser").textContent=(rtuName||rtuId)?("Tone from "+(rtuName||rtuId)+(rtuSite?" · "+rtuSite:"")):(session.user?("signed in · "+session.user):"");
+    const badge=$("testModeBadge"); badge.className="badge live"; badge.textContent="Live";
   }
 
   // ── finish / summary ──
   function finish(){
-    const offs=[],iss=[]; let done=0;
-    status.forEach((s,i)=>{ if(s==="done")done++; if(s==="off")offs.push(label(i)); });
+    if(!location_ && !confirm("No test location recorded.\n\nThe report will show \u201cnot recorded\u201d. Continue?")){ openLoc(); return; }
+    const offs=[],crs=[],iss=[]; let done=0;
+    status.forEach((s,i)=>{ if(s==="done")done++; if(s==="dis")offs.push(label(i)); if(s==="cross")crs.push({f:label(i),w:crosses[i]||""}); });
     Object.keys(issues).forEach(i=>iss.push({f:label(+i),n:issues[i]}));
-    $("finSumm").textContent=route+((rtuName||rtuId)?" · from "+(rtuName||rtuId):"")+" — "+done+" confirmed, "+offs.length+" off, "+iss.length+" issues";
+    $("finSumm").textContent=route+((rtuName||rtuId)?" · from "+(rtuName||rtuId):"")+" — "+done+" confirmed, "+offs.length+" dis, "+crs.length+" crossed, "+iss.length+" issues";
     $("finOff").innerHTML=offs.length?offs.map(f=>'<div class="line offln"><span class="fn">'+f+'</span></div>').join(""):'<div class="line">None</div>';
+    $("finCross").innerHTML=crs.length?crs.map(o=>'<div class="line"><span class="fn" style="color:var(--cross)">'+o.f+'</span>'+(o.w?' \u2715 with '+o.w.replace(/</g,"&lt;"):'')+'</div>').join(""):'<div class="line">None</div>';
     $("finIssues").innerHTML=iss.length?iss.map(o=>'<div class="line"><span class="fn">'+o.f+'</span> — '+o.n.replace(/</g,"&lt;")+'</div>').join(""):'<div class="line">None</div>';
     $("fin").classList.add("show");
   }
   function report(){
-    const offs=[],iss=[]; let done=0;
-    status.forEach((s,i)=>{ if(s==="done")done++; if(s==="off")offs.push(label(i)); });
+    const offs=[],crs=[],iss=[]; let done=0;
+    status.forEach((st,i)=>{ if(st==="done")done++; if(st==="dis")offs.push(label(i)); if(st==="cross")crs.push(label(i)+(crosses[i]?" with "+crosses[i]:"")); });
     Object.keys(issues).forEach(i=>iss.push(label(+i)+": "+issues[i]));
-    return ["FIBRE TONE TEST REPORT","="
-      .repeat(28),
+    return ["FIBRE TONE TEST REPORT","============================",
       "Cable:      "+route,
       "Toned from: "+((rtuName||rtuId)?(rtuName||rtuId)+(rtuSite?" ("+rtuSite+")":""):"not recorded"),
       "Location:   "+(location_||"not recorded"),
-      "Tester:     "+(session.user||"demo"),
+      "Tester:     "+(session.user||""),
       "Date:       "+new Date().toLocaleString("en-GB"),
       "Parameters: "+cfg.wl+" nm / "+cfg.dur+" s / "+cfg.freq+" Hz",
       "",
       "RESULT",
       "Confirmed:        "+done+" of "+TOTAL,
-      "Not detected:     "+offs.length,
+      "DIS (no tone):    "+offs.length,
+      "Crossed:          "+crs.length,
       "Issues recorded:  "+iss.length,
       "",
-      "NOT DETECTED / MARKED OFF",
+      "DIS — NO TONE DETECTED",
       (offs.length?offs.join(", "):"none"),
+      "",
+      "CROSSED FIBRES",
+      ...(crs.length?crs:["none"]),
       "",
       "ISSUES",
       ...(iss.length?iss:["none"]),
@@ -567,8 +609,8 @@ let location_="";   // joint / chamber / location of the tester
   }
 
   function reportHTML(){
-    const offs=[],iss=[]; let done=0;
-    status.forEach((s,i)=>{ if(s==="done")done++; if(s==="off")offs.push(label(i)); });
+    const offs=[],crs=[],iss=[]; let done=0;
+    status.forEach((st,i)=>{ if(st==="done")done++; if(st==="dis")offs.push(label(i)); if(st==="cross")crs.push({f:label(i),w:crosses[i]||""}); });
     Object.keys(issues).forEach(i=>iss.push({f:label(+i),n:issues[i]}));
     const esc=t=>String(t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
     return `<!doctype html><html><head><meta charset="utf-8"><title>Tone test — ${esc(route)}</title>
@@ -582,7 +624,7 @@ let location_="";   // joint / chamber / location of the tester
       th{background:#f2f7f8;width:170px;font-weight:600}
       h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#016976;margin:16px 0 6px}
       .big{font-size:20px;font-weight:700}
-      .off{color:#c00} .ok{color:#0a7a2f}
+      .off{color:#c00} .ok{color:#0a7a2f} .cross{color:#6b3fd4}
       .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
       .foot{margin-top:22px;color:#888;font-size:10px;border-top:1px solid #eee;padding-top:8px}
     </style></head><body>
@@ -592,17 +634,22 @@ let location_="";   // joint / chamber / location of the tester
       <tr><th>Cable</th><td class="mono">${esc(route)}</td></tr>
       <tr><th>Toned from RTU</th><td>${esc((rtuName||rtuId)||"not recorded")}${rtuSite?" — "+esc(rtuSite):""}</td></tr>
       <tr><th>Test location</th><td>${esc(location_||"not recorded")}</td></tr>
-      <tr><th>Tester</th><td>${esc(session.user||"demo")}</td></tr>
+      <tr><th>Tester</th><td>${esc(session.user||"")}</td></tr>
       <tr><th>Parameters</th><td>${esc(cfg.wl)} nm · ${esc(cfg.dur)} s · ${esc(cfg.freq)} Hz modulation</td></tr>
     </table>
     <h2>Result</h2>
     <table>
       <tr><th>Fibres confirmed</th><td class="big ok">${done} / ${TOTAL}</td></tr>
-      <tr><th>Not detected</th><td class="big ${offs.length?"off":""}">${offs.length}</td></tr>
+      <tr><th>DIS \u2014 no tone detected</th><td class="big ${offs.length?"off":""}">${offs.length}</td></tr>
+      <tr><th>Crossed</th><td class="big ${crs.length?"cross":""}">${crs.length}</td></tr>
       <tr><th>Issues recorded</th><td class="big">${iss.length}</td></tr>
     </table>
-    <h2>Not detected / marked off</h2>
+    <h2>DIS \u2014 no tone detected</h2>
     <p class="mono">${offs.length?esc(offs.join(", ")):"None"}</p>
+    <h2>Crossed fibres</h2>
+    ${crs.length?("<table><tr><th>Fibre</th><th style='width:auto'>Crossed with</th></tr>"+
+       crs.map(o=>`<tr><td class="mono">${esc(o.f)}</td><td>${esc(o.w||"not stated")}</td></tr>`).join("")+"</table>")
+      :"<p>None</p>"}
     <h2>Issues</h2>
     ${iss.length?("<table><tr><th>Fibre</th><th style='width:auto'>Note</th></tr>"+
        iss.map(o=>`<tr><td class="mono">${esc(o.f)}</td><td>${esc(o.n)}</td></tr>`).join("")+"</table>")
@@ -648,32 +695,27 @@ let location_="";   // joint / chamber / location of the tester
   const openS=()=>{$("sheetBg").classList.add("open");$("sheet").classList.add("open");};
   const closeS=()=>{$("sheetBg").classList.remove("open");$("sheet").classList.remove("open");};
   $("openSettings").onclick=openS; $("closeSettings").onclick=closeS; $("sheetBg").onclick=closeS;
-  $("cfgRelay").oninput=e=>{cfg.relay=e.target.value.trim();saveCfg();syncMode();};
+  $("cfgRelay").oninput=e=>{cfg.relay=e.target.value.trim();saveCfg();};
   $("cfgKey").oninput=e=>{cfg.key=e.target.value.trim();saveCfg();};
   $("cfgWl").oninput=e=>{cfg.wl=e.target.value.trim()||"1550";saveCfg();syncParams();};
   $("cfgDur").oninput=e=>{cfg.dur=e.target.value.trim()||"10";saveCfg();syncParams();};
   $("cfgFreq").oninput=e=>{cfg.freq=e.target.value.trim()||"1000";saveCfg();syncParams();};
   $("testRelay").onclick=async()=>{
-    if(isDemo()){setLink("idle","Demo mode — no relay to test.");return;}
     setLink("idle","Testing…");
     try{ const r=await fetch(cfg.relay.replace(/\/$/,"")+"/health"); setLink(r.ok?"ok":"err",r.ok?"Relay reachable ✓":"Relay returned "+r.status); }
     catch(e){ setLink("err","Can't reach relay — check URL / it's awake."); }
   };
-  $("resetBtn").onclick=()=>{ if(!confirm("Reset all 432 fibres and clear issues?"))return; status=new Array(TOTAL).fill("pending"); issues={}; current=0; viewRib=0; closeS(); render(); saveRun(); };
+  $("resetBtn").onclick=()=>{ if(!confirm("Reset all 432 fibres and clear issues?"))return; status=new Array(TOTAL).fill("pending"); issues={}; crosses={}; current=0; viewRib=0; closeS(); render(); saveRun(); };
   $("finishBtn").onclick=()=>{ closeS(); finish(); };
 
   function syncParams(){ $("pWl").textContent=cfg.wl; $("pDur").textContent=cfg.dur; $("pFreq").textContent=(+cfg.freq>=1000?(+cfg.freq/1000+" kHz"):cfg.freq+" Hz"); }
-  function syncMode(){
-    const demo=isDemo();
-    $("modeBadge").className="badge "+(demo?"demo":"live"); $("modeBadge").textContent=demo?"Demo":"Relay set";
-    $("modeText").textContent=demo?"No relay set — running in demo mode (tones are simulated).":"Relay configured — sign in to go live.";
-  }
+  function syncMode(){}
 
   // ── location ──
   let locJointV="", locNoteV="";
   const openLoc=()=>{ $("locJoint").value=locJointV; $("locNote").value=locNoteV; $("locBg").classList.add("open"); $("locSheet").classList.add("open"); };
   const closeLoc=()=>{ $("locBg").classList.remove("open"); $("locSheet").classList.remove("open"); };
-  $("openLoc").onclick=openLoc; $("locBg").onclick=closeLoc;
+  $("openLoc").onclick=openLoc; $("locBg").onclick=closeLoc; $("locBar").onclick=openLoc;
   $("locSave").onclick=()=>{
     locJointV=$("locJoint").value.trim(); locNoteV=$("locNote").value.trim();
     location_=[locJointV,locNoteV].filter(Boolean).join(" — ");
@@ -681,9 +723,22 @@ let location_="";   // joint / chamber / location of the tester
     closeLoc(); renderLocBar(); saveRun();
   };
   function renderLocBar(){
-    $("locBar").innerHTML = location_ ? ("\u2691 <b>"+location_.replace(/</g,"&lt;")+"</b>")
-                                      : '<span style="opacity:.7">\u2691 Tap the flag to set the test location</span>';
+    const b=$("locBar");
+    if(location_){ b.className="locbar"; b.innerHTML='\u2691 <b>'+location_.replace(/</g,"&lt;")+'</b><span class="lch">change</span>'; }
+    else { b.className="locbar unset"; b.innerHTML='\u26a0 SET TEST LOCATION \u2014 required for the report<span class="lch">tap</span>'; }
   }
+
+  // ── cross modal ──
+  const openCross=()=>{ $("crossTitle").textContent="Mark crossed \u2014 "+label(current); $("crossWith").value=crosses[current]||""; $("crossBg").classList.add("open"); $("crossSheet").classList.add("open"); };
+  const closeCross=()=>{ $("crossBg").classList.remove("open"); $("crossSheet").classList.remove("open"); };
+  $("crossBg").onclick=closeCross;
+  $("crossSave").onclick=()=>{
+    const v=$("crossWith").value.trim();
+    status[current]="cross";
+    if(v) crosses[current]=v; else delete crosses[current];
+    closeCross(); render(); saveRun();
+  };
+  $("crossClear").onclick=()=>{ if(status[current]==="cross") status[current]="pending"; delete crosses[current]; closeCross(); render(); saveRun(); };
 
   // ── issue modal ──
   const openIssue=()=>{ $("issueTitle").textContent="Record issue — "+label(current); $("issueText").value=issues[current]||""; $("issueBg").classList.add("open"); $("issueSheet").classList.add("open"); };
@@ -700,7 +755,9 @@ let location_="";   // joint / chamber / location of the tester
   $("finPdf").onclick=pdfReport;
 
   // ── test actions ──
-  $("nextBtn").onclick=next; $("backBtn").onclick=back; $("repeatBtn").onclick=repeat; $("offBtn").onclick=toggleOff;
+  $("nextBtn").onclick=next; $("backBtn").onclick=back; $("repeatBtn").onclick=repeat;
+  $("disBtn").onclick=toggleDis; $("crossBtn").onclick=toggleCross;
+  $("finishNow").onclick=()=>{ clearInterval(cdTimer); toning=false; $("hero").classList.remove("toning"); finish(); };
   $("ribPrev").onclick=()=>{viewRib=(viewRib-1+RIBBONS)%RIBBONS;render();saveRun();};
   $("ribNext").onclick=()=>{viewRib=(viewRib+1)%RIBBONS;render();saveRun();};
   document.addEventListener("keydown",e=>{
@@ -709,20 +766,20 @@ let location_="";   // joint / chamber / location of the tester
     if(e.code==="Space"||e.code==="Enter"||e.code==="ArrowRight"){e.preventDefault();next();}
     else if(e.code==="ArrowLeft"){e.preventDefault();back();}
     else if(e.key==="r"||e.key==="R"){e.preventDefault();repeat();}
-    else if(e.key==="f"||e.key==="F"){e.preventDefault();toggleOff();}
+    else if(e.key==="f"||e.key==="F"||e.key==="d"||e.key==="D"){e.preventDefault();toggleDis();}
+    else if(e.key==="x"||e.key==="X"){e.preventDefault();toggleCross();}
   });
 
   // ── login screen ──
   $("loginBtn").onclick=async()=>{
     $("loginErr").textContent="";
     const u=$("inUser").value.trim(), p=$("inPass").value;
-    if(!isDemo() && (!u||!p)){ $("loginErr").textContent="Enter username and password."; return; }
+    if(!u||!p){ $("loginErr").textContent="Enter username and password."; return; }
     $("loginBtn").textContent="Signing in…"; $("loginBtn").disabled=true;
     try{ await doLogin(u,p); gotoRoute(); }
     catch(e){ $("loginErr").textContent=e.message; }
     finally{ $("loginBtn").textContent="Sign in"; $("loginBtn").disabled=false; }
   };
-  $("demoLink").onclick=()=>{ session={id:"demo",user:"demo"}; saveSes(); gotoRoute(); };
   $("cfgLink").onclick=openS;
   $("backToLogin").onclick=()=>{ session={id:"",user:""}; saveSes(); show("screen-login"); };
 
@@ -730,7 +787,7 @@ let location_="";   // joint / chamber / location of the tester
   $("inRoute").oninput=e=>{ const v=e.target.value.trim().toUpperCase(); $("routePreview").textContent=(v||"F-RGAC-SNBC-A-R432")+"-F001"; };
   $("manualLink").onclick=()=>{ const w=$("manualWrap"); w.style.display = w.style.display==="none"?"block":"none"; };
   $("startTestBtn").onclick=()=>{ const v=$("inRoute").value.trim().toUpperCase(); if(!v){$("inRoute").focus();return;}
-    if(!isDemo() && !confirm("No RTU selected.\n\nThis cable is visible from both ends, so live toning needs an RTU. Searching and tapping the cable is safer.\n\nContinue anyway?")) return;
+    if(!confirm("No RTU selected.\n\nThis cable is visible from both ends, so live toning needs an RTU. Searching and tapping the cable is safer.\n\nContinue anyway?")) return;
     beginRoute(v,"","","",true); };
   $("searchBtn").onclick=()=>doSearch();
   $("inSearch").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();doSearch();} });
@@ -738,19 +795,14 @@ let location_="";   // joint / chamber / location of the tester
   // Back to the cable picker from the test screen (progress is saved per route)
   $("backToCable").onclick=()=>{ clearInterval(cdTimer); toning=false; $("hero").classList.remove("toning"); saveRun(); gotoRoute(); };
 
-  const DEMO_CABLES=[
-    {stem:"F-RGAC-SNBC-A-R432",rtuId:"27530",rtuName:"RTU-RGAC-01",site:"Reading",fibres:432,online:true,attachStatus:"ATTACHED"},
-    {stem:"F-RGAC-SNBC-A-R432",rtuId:"27891",rtuName:"RTU-SNBC-01",site:"Swindon",fibres:432,online:false,attachStatus:"DETACHED"},
-    {stem:"F-ABDR-RHYM-A-R432",rtuId:"31002",rtuName:"RTU-ABDR-01",site:"Aberdare",fibres:432,online:true,attachStatus:"ATTACHED"}];
 
   async function doSearch(){
     const q=$("inSearch").value.trim();
     if(!q){ $("inSearch").focus(); return; }
     $("cableList").innerHTML=""; $("cableStatus").textContent="Searching FMS…";
     try{
-      let cables;
-      if(isDemo()){ await new Promise(r=>setTimeout(r,400)); cables=DEMO_CABLES.filter(c=>c.stem.includes(q.toUpperCase())); }
-      else { const d=await relay("/api/routes",{search:q}); cables=d.cables||[]; }
+      const d=await relay("/api/routes",{search:q});
+      const cables=d.cables||[];
       if(!cables.length){ $("cableStatus").textContent="No cables matched \u201c"+q+"\u201d."; return; }
       $("cableStatus").textContent=cables.length+" cable"+(cables.length>1?"s":"")+" found — tap to start:";
       $("cableList").innerHTML=cables.map((c,i)=>{
@@ -782,10 +834,11 @@ let location_="";   // joint / chamber / location of the tester
 
     const prev=jget(RUN,null);
     if(prev && prev.route===v && (prev.rtuId||"")===rtuId){
-      status=prev.status; issues=prev.issues||{}; current=prev.current||0; viewRib=prev.viewRib||0;
-    } else { status=new Array(TOTAL).fill("pending"); issues={}; current=0; viewRib=0; }
-    saveRun(); syncParams(); show("screen-test"); render();
-    if(isDemo()){ toneCurrent(); } else { primeAndStart(); }
+      status=prev.status; issues=prev.issues||{}; crosses=prev.crosses||{}; current=prev.current||0; viewRib=prev.viewRib||0;
+    } else { status=new Array(TOTAL).fill("pending"); issues={}; crosses={}; current=0; viewRib=0; }
+    saveRun(); syncParams(); show("screen-test"); render(); renderLocBar();
+    if(!location_){ openLoc(); }      // location is required — ask up front
+    primeAndStart();
   }
   async function primeAndStart(){
     setState("idle","Priming "+route+"…");
