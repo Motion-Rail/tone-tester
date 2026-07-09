@@ -412,11 +412,11 @@
   const CFG="toneTester.cfg", SES="toneTester.session", RUN="toneTester.run";
 
   // ── persisted config ──
-  // Relay defaults. NOTE: anything shipped to the browser is readable by anyone who
-// opens the page. Real protection is APP_ORIGIN on the relay, which restricts
-// which site may call it. Do not treat APP_KEY as a secret.
+  // Relay defaults. APP_KEY is NOT a secret: it ships to the browser and is readable
+// by anyone who opens the page. The real control is APP_ORIGIN on the relay, which
+// restricts which site may call it. Keep APP_ORIGIN locked to the app URL.
   const DEFAULT_RELAY="https://relay-njqb.onrender.com";
-  const DEFAULT_KEY="b5iFJmAOoifTKyrlDjdZt_mLrZZCrrhO";
+  const DEFAULT_KEY="123456";
   let cfg={relay:DEFAULT_RELAY, key:DEFAULT_KEY, wl:"1550", dur:"10", freq:"330"};
   let session={id:"", user:""};
   let route="", rtuId="", rtuName="", rtuSite="", rtuOnline=true;
@@ -863,9 +863,11 @@ let crosses={};                              // index -> "crossed with ..."
 
   // ── init ──
   { const saved=jget(CFG,{}) || {};
-    Object.keys(saved).forEach(k=>{ if(saved[k]!=="" && saved[k]!=null) cfg[k]=saved[k]; });
-    if(!cfg.relay) cfg.relay=DEFAULT_RELAY;
-    if(!cfg.key)   cfg.key=DEFAULT_KEY;
+    // Only tone params persist; relay + key always follow the hardcoded defaults so a
+    // stale value cached on a phone can never silently break auth after a redeploy.
+    ["wl","dur","freq"].forEach(k=>{ if(saved[k]) cfg[k]=saved[k]; });
+    cfg.relay=DEFAULT_RELAY; cfg.key=DEFAULT_KEY;
+    saveCfg();
   }
   session=jget(SES,session);
   { const pr=jget(RUN,null); if(pr){ rtuId=pr.rtuId||""; rtuName=pr.rtuName||""; rtuSite=pr.rtuSite||""; rtuOnline=pr.rtuOnline!==false; location_=pr.location_||""; } }
