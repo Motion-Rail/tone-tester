@@ -91,6 +91,13 @@
                 animation:locNag 1.6s ease-in-out infinite;}
   @keyframes locNag{0%,100%{opacity:1}50%{opacity:.62}}
   .locbar .lch{margin-left:auto; font-size:.64rem; color:var(--muted); font-weight:600;}
+  .scope-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .scope-opt{padding:12px 8px; border-radius:10px; border:1px solid var(--border); background:var(--bg);
+             color:var(--text); font-size:.9rem; font-weight:700; cursor:pointer; display:flex;
+             flex-direction:column; align-items:center; gap:3px;}
+  .scope-opt span{font-size:.62rem; font-weight:500; color:var(--muted);}
+  .scope-opt.sel{border-color:var(--tone); background:#0d2b30; color:var(--tone);}
+  .scope-opt.sel span{color:var(--tone);}
   .progress-row{display:flex; align-items:center; gap:10px; padding:8px 0 10px;}
   .bar{flex:1; height:7px; border-radius:4px; background:var(--surface2); overflow:hidden;}
   .bar>i{display:block; height:100%; width:0; background:var(--done); transition:width .18s ease;}
@@ -153,6 +160,8 @@
   .cell.dis{background:var(--off-dim); border-color:var(--off);} .cell.dis .cno{color:var(--off);}
   .cell.cross{background:var(--cross-dim); border-color:var(--cross);} .cell.cross .cno{color:var(--cross);}
   .cell .xmark{position:absolute; top:5px; left:5px; font-size:.6rem; color:var(--cross); font-weight:800;}
+  .cell.oos{opacity:.22; pointer-events:none; filter:grayscale(1);}
+  .dot.oos{opacity:.12; pointer-events:none;}
   .cell.here{outline:2px solid var(--tone); border-color:var(--tone);}
   .cell .flagdot{position:absolute; top:5px; right:5px; width:7px; height:7px; border-radius:50%; background:var(--tone);}
 
@@ -277,7 +286,7 @@
     <div class="locbar" id="locBar"></div>
     <div class="progress-row">
       <div class="bar"><i id="bar"></i></div>
-      <div class="counts"><b id="cDone">0</b>/432 · <span class="of" id="cOff">0</span> dis · <span class="cx" id="cCross">0</span> cross · <span id="cLeft">432</span> left</div>
+      <div class="counts"><b id="cDone">0</b>/<span id="cScopeTot">432</span> · <span class="of" id="cOff">0</span> dis · <span class="cx" id="cCross">0</span> cross · <span id="cLeft">432</span> left</div>
     </div>
   </header>
 
@@ -388,6 +397,23 @@
   <input type="text" id="locJoint" placeholder="e.g. JNT-014, Chamber 27, NRS-305" autocomplete="off">
   <label class="fld" for="locNote">Detail (optional)</label>
   <input type="text" id="locNote" placeholder="e.g. down-line side, ELR SWM 42m 15ch" autocomplete="off">
+
+  <label class="fld">Fibres under test</label>
+  <div class="scope-grid" id="scopeGrid">
+    <button class="scope-opt" data-m="all">All 432</button>
+    <button class="scope-opt" data-m="odd">Odd<span>F001, F003\u2026</span></button>
+    <button class="scope-opt" data-m="even">Even<span>F002, F004\u2026</span></button>
+    <button class="scope-opt" data-m="range">Range<span>choose</span></button>
+  </div>
+  <div id="rangeWrap" style="display:none;">
+    <div class="row2" style="margin-top:8px; align-items:center;">
+      <div style="flex:1"><input type="text" id="rgFrom" inputmode="numeric" placeholder="from 1"></div>
+      <span style="color:var(--muted)">to</span>
+      <div style="flex:1"><input type="text" id="rgTo" inputmode="numeric" placeholder="to 432"></div>
+    </div>
+  </div>
+  <p class="hint" id="scopeSummary" style="margin-top:8px;"></p>
+
   <div class="row2"><button class="btn-wide" id="locSave">Save</button></div>
 </div>
 
@@ -429,6 +455,25 @@
   let session={id:"", user:""};
   let route="", rtuId="", rtuName="", rtuSite="", rtuOnline=true;
 let location_="";   // joint / chamber / location of the tester
+let scopeMode="all";   // all | odd | even | range
+let scopeFrom=1, scopeTo=TOTAL;   // for range mode (global fibre numbers, 1-based)
+
+// Is a fibre (0-based global index) part of this session's scope?
+function inScope(i){
+  const f=i+1;
+  if(scopeMode==="odd")  return f%2===1;
+  if(scopeMode==="even") return f%2===0;
+  if(scopeMode==="range")return f>=scopeFrom && f<=scopeTo;
+  return true;
+}
+function scopeCount(){ let n=0; for(let i=0;i<TOTAL;i++) if(inScope(i)) n++; return n; }
+function scopeLabel(){
+  if(scopeMode==="odd")  return "Odd fibres";
+  if(scopeMode==="even") return "Even fibres";
+  if(scopeMode==="range")return "F"+String(scopeFrom).padStart(3,"0")+"\u2013F"+String(scopeTo).padStart(3,"0");
+  return "All fibres";
+}
+function firstInScope(){ for(let i=0;i<TOTAL;i++) if(inScope(i)) return i; return 0; }
   let status=new Array(TOTAL).fill("pending"); // pending | done | dis | cross
 let crosses={};                              // index -> "crossed with ..."
   let issues={};                               // index -> note
@@ -442,7 +487,7 @@ let crosses={};                              // index -> "crossed with ..."
   const jget=(k,d)=>{ try{const v=JSON.parse(localStorage.getItem(k)); return v==null?d:v;}catch(e){return d;} };
   const jset=(k,v)=>{ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} };
   const saveCfg=()=>jset(CFG,cfg), saveSes=()=>jset(SES,session);
-  const saveRun=()=>jset(RUN,{route,rtuId,rtuName,rtuSite,rtuOnline,location_,status,issues,crosses,current,viewRib});
+  const saveRun=()=>jset(RUN,{route,rtuId,rtuName,rtuSite,rtuOnline,location_,scopeMode,scopeFrom,scopeTo,status,issues,crosses,current,viewRib});
 
   const ribOf=i=>Math.floor(i/PER), posOf=i=>i%PER;
   const label=i=>"F"+String(i+1).padStart(3,"0");
@@ -450,8 +495,8 @@ let crosses={};                              // index -> "crossed with ..."
   const ribStart=r=>r*PER;
 
   function findNext(from){
-    for(let i=from+1;i<TOTAL;i++) if(status[i]!=="done") return i;
-    for(let i=0;i<=from;i++) if(status[i]!=="done") return i;
+    for(let i=from+1;i<TOTAL;i++) if(inScope(i) && status[i]!=="done") return i;
+    for(let i=0;i<=from;i++) if(inScope(i) && status[i]!=="done") return i;
     return -1;
   }
 
@@ -615,13 +660,16 @@ let crosses={};                              // index -> "crossed with ..."
 
     $("ribLabel").textContent="Ribbon "+(viewRib+1);
     $("ribRange").textContent=label(ribStart(viewRib))+" – "+label(ribStart(viewRib)+PER-1);
-    $("gridLbl").textContent="Ribbon "+(viewRib+1)+" — tap a fibre to jump";
+    $("gridLbl").textContent="Ribbon "+(viewRib+1)+" \u00b7 "+scopeLabel()+" \u2014 tap a fibre to jump";
 
     const dots=$("dots"); dots.innerHTML="";
     for(let rr=0;rr<RIBBONS;rr++){
-      let d=0,off=0,cr=0; for(let k=0;k<PER;k++){const s=status[ribStart(rr)+k]; if(s==="done")d++; else if(s==="dis")off++; else if(s==="cross")cr++;}
+      let d=0,off=0,cr=0,tot=0;
+      for(let k=0;k<PER;k++){ const gi=ribStart(rr)+k; if(!inScope(gi)) continue; tot++;
+        const s=status[gi]; if(s==="done")d++; else if(s==="dis")off++; else if(s==="cross")cr++; }
       const el=document.createElement("div");
-      el.className="dot"+(d===PER?" done":off>0?" hasoff":cr>0?" hascross":d>0?" partial":"")+(rr===viewRib?" here":"");
+      const cls = tot===0 ? " oos" : (d===tot?" done":off>0?" hasoff":cr>0?" hascross":d>0?" partial":"");
+      el.className="dot"+cls+(rr===viewRib?" here":"");
       el.title="Ribbon "+(rr+1); el.onclick=()=>jumpRibbon(rr); dots.appendChild(el);
     }
 
@@ -629,17 +677,21 @@ let crosses={};                              // index -> "crossed with ..."
     for(let k=0;k<PER;k++){
       const gi=ribStart(viewRib)+k, gc=IEC[k];
       const cell=document.createElement("div");
-      cell.className="cell "+status[gi]+(gi===ci?" here":"");
+      const oos=!inScope(gi);
+      cell.className="cell "+status[gi]+(gi===ci?" here":"")+(oos?" oos":"");
       cell.innerHTML='<div class="cno mono">'+label(gi)+'</div><div class="cband" style="background:'+gc.hex+'"></div><div class="ccol">'+gc.n+'</div>'+(issues[gi]?'<div class="flagdot"></div>':'')+(status[gi]==="cross"?'<div class="xmark">\u2715</div>':'');
-      cell.onclick=()=>setCurrent(gi); grid.appendChild(cell);
+      if(!oos) cell.onclick=()=>setCurrent(gi); grid.appendChild(cell);
     }
 
-    let done=0,dis=0,cr=0; for(const s of status){ if(s==="done")done++; else if(s==="dis")dis++; else if(s==="cross")cr++; }
+    let done=0,dis=0,cr=0,tot=0;
+    for(let i=0;i<TOTAL;i++){ if(!inScope(i)) continue; tot++;
+      const s=status[i]; if(s==="done")done++; else if(s==="dis")dis++; else if(s==="cross")cr++; }
     $("cDone").textContent=done; $("cOff").textContent=dis; $("cCross").textContent=cr;
-    $("cLeft").textContent=TOTAL-done-dis-cr;
+    $("cScopeTot").textContent=tot; $("cLeft").textContent=tot-done-dis-cr;
     $("bar").style.width=(done/TOTAL*100)+"%";
     $("hRoute").textContent=route;
-    $("hUser").textContent=(rtuName||rtuId)?("Tone from "+(rtuName||rtuId)+(rtuSite?" · "+rtuSite:"")):(session.user?("signed in · "+session.user):"");
+    $("hUser").textContent=((rtuName||rtuId)?("Tone from "+(rtuName||rtuId)+(rtuSite?" · "+rtuSite:"")):"")
+      + (scopeMode!=="all"?("  ·  "+scopeLabel()):"");
     const badge=$("testModeBadge"); badge.className="badge live"; badge.textContent="Live";
   }
 
@@ -663,6 +715,7 @@ let crosses={};                              // index -> "crossed with ..."
       "Cable:      "+route,
       "Toned from: "+((rtuName||rtuId)?(rtuName||rtuId)+(rtuSite?" ("+rtuSite+")":""):"not recorded"),
       "Location:   "+(location_||"not recorded"),
+      "Under test: "+scopeLabel()+" ("+scopeCount()+" fibres)",
       "Tester:     "+(session.user||""),
       "Date:       "+new Date().toLocaleString("en-GB"),
       "Parameters: "+cfg.wl+" nm / "+cfg.dur+" s / "+cfg.freq+" Hz",
@@ -735,11 +788,12 @@ let crosses={};                              // index -> "crossed with ..."
     kv("Cable", route);
     kv("Toned from RTU", ((rtuName||rtuId)||"not recorded") + (rtuSite?"  -  "+rtuSite:""));
     kv("Test location", location_||"not recorded");
+    kv("Fibres under test", scopeLabel()+" ("+scopeCount()+" of "+TOTAL+")");
     kv("Tester", session.user||"");
     kv("Parameters", cfg.wl+" nm  |  "+cfg.dur+" s  |  "+cfg.freq+" Hz modulation");
 
     h2("Result");
-    kv("Fibres confirmed", done+" of "+TOTAL);
+    kv("Fibres confirmed", done+" of "+scopeCount());
     kv("DIS (no tone)", String(offs.length));
     kv("Crossed", String(crs.length));
     kv("Issues recorded", String(iss.length));
@@ -819,18 +873,38 @@ let crosses={};                              // index -> "crossed with ..."
 
   // ── location ──
   let locJointV="", locNoteV="";
-  const openLoc=()=>{ $("locJoint").value=locJointV; $("locNote").value=locNoteV; $("locBg").classList.add("open"); $("locSheet").classList.add("open"); };
+  function paintScope(){
+    document.querySelectorAll(".scope-opt").forEach(el=>el.classList.toggle("sel",el.getAttribute("data-m")===scopeMode));
+    $("rangeWrap").style.display = scopeMode==="range" ? "block" : "none";
+    let n; if(scopeMode==="range"){ const a=clampF($("rgFrom").value,1), b=clampF($("rgTo").value,TOTAL);
+      n=(b>=a)?(b-a+1):0; $("scopeSummary").textContent=n?("Testing "+n+" fibres, F"+pad(a)+" to F"+pad(b)):"Enter a valid range."; }
+    else { n=scopeCount(); $("scopeSummary").textContent="Testing "+n+" of "+TOTAL+" fibres."; }
+  }
+  const pad=n=>String(n).padStart(3,"0");
+  const clampF=(v,d)=>{ let x=parseInt(v,10); if(isNaN(x))x=d; return Math.min(TOTAL,Math.max(1,x)); };
+  document.querySelectorAll(".scope-opt").forEach(el=>el.onclick=()=>{ scopeMode=el.getAttribute("data-m"); paintScope(); });
+  $("rgFrom").oninput=()=>{ scopeFrom=clampF($("rgFrom").value,1); paintScope(); };
+  $("rgTo").oninput=()=>{ scopeTo=clampF($("rgTo").value,TOTAL); paintScope(); };
+
+  const openLoc=()=>{ $("locJoint").value=locJointV; $("locNote").value=locNoteV;
+    $("rgFrom").value=scopeFrom; $("rgTo").value=scopeTo; paintScope();
+    $("locBg").classList.add("open"); $("locSheet").classList.add("open"); };
   const closeLoc=()=>{ $("locBg").classList.remove("open"); $("locSheet").classList.remove("open"); };
   $("openLoc").onclick=openLoc; $("locBg").onclick=closeLoc; $("locBar").onclick=openLoc;
   $("locSave").onclick=()=>{
     locJointV=$("locJoint").value.trim(); locNoteV=$("locNote").value.trim();
-    location_=[locJointV,locNoteV].filter(Boolean).join(" — ");
+    location_=[locJointV,locNoteV].filter(Boolean).join(" \u2014 ");
+    if(scopeMode==="range"){ scopeFrom=clampF($("rgFrom").value,1); scopeTo=clampF($("rgTo").value,TOTAL);
+      if(scopeTo<scopeFrom){ const t=scopeFrom; scopeFrom=scopeTo; scopeTo=t; } }
     jset("toneTester.loc",{j:locJointV,n:locNoteV});
-    closeLoc(); renderLocBar(); saveRun();
+    // if current fibre falls outside the new scope, jump to the first in-scope one
+    if(!inScope(current)){ const f=firstInScope(); current=f; viewRib=ribOf(f); }
+    closeLoc(); renderLocBar(); render(); saveRun();
   };
   function renderLocBar(){
     const b=$("locBar");
-    if(location_){ b.className="locbar"; b.innerHTML='\u2691 <b>'+location_.replace(/</g,"&lt;")+'</b><span class="lch">change</span>'; }
+    if(location_){ b.className="locbar";
+      b.innerHTML='\u2691 <b>'+location_.replace(/</g,"&lt;")+'</b> \u00b7 '+scopeLabel()+' ('+scopeCount()+')<span class="lch">change</span>'; }
     else { b.className="locbar unset"; b.innerHTML='\u26a0 SET TEST LOCATION \u2014 required for the report<span class="lch">tap</span>'; }
   }
 
@@ -934,7 +1008,7 @@ let crosses={};                              // index -> "crossed with ..."
 
     const prev=jget(RUN,null);
     if(prev && prev.route===v && (prev.rtuId||"")===rtuId){
-      status=prev.status; issues=prev.issues||{}; crosses=prev.crosses||{}; current=prev.current||0; viewRib=prev.viewRib||0;
+      status=prev.status; issues=prev.issues||{}; crosses=prev.crosses||{}; current=prev.current||0; viewRib=prev.viewRib||0; scopeMode=prev.scopeMode||"all"; scopeFrom=prev.scopeFrom||1; scopeTo=prev.scopeTo||TOTAL;
     } else { status=new Array(TOTAL).fill("pending"); issues={}; crosses={}; current=0; viewRib=0; }
     saveRun(); syncParams(); show("screen-test"); render(); renderLocBar();
     if(!location_){ openLoc(); }      // location is required — ask up front
@@ -979,7 +1053,7 @@ let crosses={};                              // index -> "crossed with ..."
     saveCfg();
   }
   session=jget(SES,session);
-  { const pr=jget(RUN,null); if(pr){ rtuId=pr.rtuId||""; rtuName=pr.rtuName||""; rtuSite=pr.rtuSite||""; rtuOnline=pr.rtuOnline!==false; location_=pr.location_||""; } }
+  { const pr=jget(RUN,null); if(pr){ rtuId=pr.rtuId||""; rtuName=pr.rtuName||""; rtuSite=pr.rtuSite||""; rtuOnline=pr.rtuOnline!==false; location_=pr.location_||""; scopeMode=pr.scopeMode||"all"; scopeFrom=pr.scopeFrom||1; scopeTo=pr.scopeTo||TOTAL; } }
   $("cfgRelay").value=cfg.relay; $("cfgKey").value=cfg.key;
   $("cfgWl").value=cfg.wl; $("cfgDur").value=cfg.dur; $("cfgFreq").value=cfg.freq;
   { const L=jget('toneTester.loc',null); if(L){ locJointV=L.j||''; locNoteV=L.n||''; location_=[locJointV,locNoteV].filter(Boolean).join(' \u2014 '); } }
